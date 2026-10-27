@@ -1,0 +1,173 @@
+:root {
+  --bg: #202923;
+  --surface: #303A34;
+  --primary: #39765B;
+  --accent: #70B68A;
+  --text: #F0F3EF;
+}
+
+* { box-sizing: border-box; }
+
+html, body { min-height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1 { font-size: 1.4rem; margin: 0; }
+
+.w-full { width: 100%; }
+
+/* ---------- Layout ---------- */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dash-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* ---------- Cabecera ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: env(safe-area-inset-top);
+  background: var(--p-content-background);
+  border-bottom: 1px solid var(--p-content-border-color);
+}
+.topbar .p-menubar {
+  border: 0;
+  border-radius: 0;
+  padding-inline: 1rem;
+}
+.brand-bar { padding: .75rem 1rem; }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.brand img { width: 32px; height: 32px; border-radius: 8px; }
+
+/* ---------- Login ---------- */
+.login-wrap {
+  min-height: calc(100dvh - 8rem);
+  display: grid;
+  place-items: center;
+}
+.login-card { width: 100%; max-width: 420px; }
+.login-logo { display: flex; flex-direction: column; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
+.login-logo img { width: 72px; height: 72px; border-radius: 16px; }
+
+.field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+.field label { font-size: .9rem; opacity: .85; }
+.field .err { color: #ff9b9b; }
+
+/* ---------- Gráfica ---------- */
+.chart-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
+.chart-wrap { height: clamp(220px, 38vh, 380px); }
+.chart-wrap p-chart { display: block; height: 100%; }
+
+/* ---------- IMC ---------- */
+.imc-badge {
+  display: inline-block;
+  padding: .15rem .6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .85rem;
+  color: #202923;
+  white-space: nowrap;
+}
+
+/* ---------- Tabla / tarjetas ---------- */
+.num { text-align: right; }
+.actions { white-space: nowrap; text-align: right; }
+
+.rec-card {
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 12px;
+  padding: .85rem 1rem;
+  margin-bottom: .75rem;
+}
+.rec-card header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem; }
+.rec-card dl { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem 1rem; margin: 0; }
+.rec-card dt { font-size: .75rem; opacity: .7; }
+.rec-card dd { margin: 0; font-weight: 600; }
+.rec-card footer { display: flex; justify-content: flex-end; gap: .25rem; margin-top: .5rem; }
+
+/* ---------- Formulario del modal ---------- */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+.form-grid .full { grid-column: 1 / -1; }
+
+/* Escritorio: modal centrada de ancho fijo */
+.record-dialog.p-dialog { width: 30rem; max-width: 95vw; }
+
+/* ---------- Responsive ---------- */
+.only-mobile { display: none; }
+
+.fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 50;
+  width: 3.5rem;
+  height: 3.5rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .45);
+}
+
+@media (max-width: 640px) {
+  .only-desktop { display: none !important; }
+  .only-mobile { display: revert; }
+  .page { padding: .75rem; }
+  h1 { font-size: 1.2rem; }
+  .p-button { min-height: 44px; }           /* objetivo táctil mínimo */
+  .p-button-icon-only { min-width: 44px; }
+
+  /* Modal de añadir/editar: PANTALLA COMPLETA en móvil */
+  .record-dialog.p-dialog {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+  }
+  .record-dialog .p-dialog-header {
+    padding-top: calc(1rem + env(safe-area-inset-top));
+  }
+  .record-dialog .p-dialog-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .record-dialog .p-dialog-footer {
+    display: flex;
+    gap: .5rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--p-content-border-color);
+  }
+  .record-dialog .p-dialog-footer p-button { flex: 1; }
+  .record-dialog .p-dialog-footer .p-button { width: 100%; }
+}
