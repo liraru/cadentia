@@ -1,4 +1,5 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -7,19 +8,23 @@ interface BeforeInstallPromptEvent extends Event {
 
 @Injectable({ providedIn: 'root' })
 export class InstallService {
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
   private readonly deferred = signal<BeforeInstallPromptEvent | null>(null);
   private readonly installed = signal(
-    matchMedia('(display-mode: standalone)').matches ||
-      (navigator as unknown as { standalone?: boolean }).standalone === true,
+    this.isBrowser &&
+      (matchMedia('(display-mode: standalone)').matches ||
+        (navigator as unknown as { standalone?: boolean }).standalone === true),
   );
-  private readonly isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  private readonly isIos = this.isBrowser && /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-  /** Mostrar el botón: no instalada y (hay prompt nativo o es iOS) */
   readonly available = computed(
     () => !this.installed() && (this.deferred() !== null || this.isIos),
   );
 
   constructor() {
+    if (!this.isBrowser) return;
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       this.deferred.set(e as BeforeInstallPromptEvent);

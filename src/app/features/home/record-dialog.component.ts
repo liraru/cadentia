@@ -1,3 +1,4 @@
+import { formatNumber, isPlatformBrowser } from '@angular/common';
 import {
   Component,
   computed,
@@ -5,23 +6,23 @@ import {
   inject,
   input,
   model,
+  PLATFORM_ID,
   signal,
   untracked,
 } from '@angular/core';
-import { formatNumber } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ConfirmEventType, ConfirmationService, MessageService } from 'primeng/api';
-import { DialogModule } from 'primeng/dialog';
+import { ConfirmationService, ConfirmEventType, MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
+import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../core/auth.service';
-import { WeightService } from '../../core/weight.service';
-import { WeightRecord, WeightRecordInput } from '../../core/models';
-import { calcImc, imcBand } from '../../core/imc';
 import { fromIsoDate, toIsoDate } from '../../core/dates';
+import { calcImc, imcBand } from '../../core/imc';
+import { WeightRecord, WeightRecordInput } from '../../core/models';
+import { WeightService } from '../../core/weight.service';
 
 /**
  * Modal de añadir/editar registro.
@@ -175,7 +176,8 @@ export class RecordDialogComponent {
   private readonly toast = inject(MessageService);
 
   protected readonly today = new Date();
-  protected readonly isMobile = matchMedia('(max-width: 640px)').matches;
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  protected readonly isMobile = this.isBrowser && matchMedia('(max-width: 640px)').matches;
   protected readonly saving = signal(false);
   protected readonly band = imcBand;
   protected readonly height = computed(() => this.auth.profile()?.height ?? null);
