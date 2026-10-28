@@ -1,44 +1,86 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CardModule } from 'primeng/card';
-import { InputTextModule } from 'primeng/inputtext';
-import { PasswordModule } from 'primeng/password';
-import { ButtonModule } from 'primeng/button';
-import { MessageModule } from 'primeng/message';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
   selector: 'app-login-form',
-  imports: [ReactiveFormsModule, CardModule, InputTextModule, PasswordModule, ButtonModule, MessageModule],
+  imports: [
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
   template: `
     <div class="login-wrap">
-      <p-card class="login-card">
+      <mat-card class="login-card">
         <div class="login-logo">
           <img src="icons/icon-192x192.png" alt="Logotipo" />
           <h1>Registro de peso</h1>
         </div>
 
-        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-          <div class="field">
-            <label for="email">Correo electrónico</label>
-            <input id="email" pInputText type="email" formControlName="email"
-                   autocomplete="username" inputmode="email" class="w-full" />
-          </div>
+        <form class="login-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <mat-form-field>
+            <mat-label>Correo electrónico</mat-label>
+            <input
+              matInput
+              type="email"
+              formControlName="email"
+              autocomplete="username"
+              inputmode="email"
+            />
+          </mat-form-field>
 
-          <div class="field">
-            <label for="password">Contraseña</label>
-            <p-password inputId="password" formControlName="password" [feedback]="false"
-                        [toggleMask]="true" [fluid]="true" autocomplete="current-password" />
-          </div>
+          <mat-form-field>
+            <mat-label>Contraseña</mat-label>
+            <input
+              matInput
+              formControlName="password"
+              autocomplete="current-password"
+              [type]="showPassword() ? 'text' : 'password'"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.aria-pressed]="showPassword()"
+              (click)="showPassword.set(!showPassword())"
+            >
+              <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </mat-form-field>
 
           @if (error()) {
-            <p-message severity="error" styleClass="w-full">{{ error() }}</p-message>
+            <div class="form-error" role="alert">
+              <mat-icon>error</mat-icon>
+              <span>{{ error() }}</span>
+            </div>
           }
 
-          <p-button type="submit" label="Entrar" icon="pi pi-sign-in" [fluid]="true"
-                    [loading]="loading()" [disabled]="form.invalid" />
+          <button
+            mat-flat-button
+            type="submit"
+            class="w-full"
+            [disabled]="form.invalid || loading()"
+          >
+            @if (loading()) {
+              <mat-spinner diameter="18" />
+            } @else {
+              <mat-icon>login</mat-icon>
+            }
+            Entrar
+          </button>
         </form>
-      </p-card>
+      </mat-card>
     </div>
   `,
 })
@@ -48,6 +90,7 @@ export class LoginFormComponent {
 
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly showPassword = signal(false);
 
   protected readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],

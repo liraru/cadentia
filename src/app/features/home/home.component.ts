@@ -1,43 +1,72 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { formatDate } from '@angular/common';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../core/auth.service';
+import { ConfirmService } from '../../core/confirm.service';
+import { NotifyService } from '../../core/notify.service';
 import { WeightService } from '../../core/weight.service';
 import { WeightRecord } from '../../core/models';
 import { LoginFormComponent } from './login-form.component';
 import { WeightChartComponent } from './weight-chart.component';
 import { WeightTableComponent } from './weight-table.component';
-import { RecordDialogComponent } from './record-dialog.component';
+import { RecordDialogComponent, RecordDialogData } from './record-dialog.component';
 
 @Component({
   selector: 'app-home',
   imports: [
-    ButtonModule, CardModule, LoginFormComponent,
-    WeightChartComponent, WeightTableComponent, RecordDialogComponent,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    LoginFormComponent,
+    WeightChartComponent,
+    WeightTableComponent,
   ],
   template: `
     @if (auth.ready()) {
       @if (auth.user()) {
         <div class="dash-head">
           <h1>Hola, {{ auth.profile()?.name }}</h1>
-          <p-button class="only-desktop" label="Añadir registro" icon="pi pi-plus" (onClick)="openNew()" />
+          <button mat-flat-button type="button" class="only-desktop" (click)="openRecord(null)">
+            <mat-icon>add</mat-icon>
+            Añadir registro
+          </button>
         </div>
 
-        <p-card header="Evolución">
-          <app-weight-chart [records]="weights.records()" />
-        </p-card>
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Evolución</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <app-weight-chart [records]="weights.records()" />
+          </mat-card-content>
+        </mat-card>
 
-        <p-card header="Últimos registros">
-          <app-weight-table [records]="weights.records()" (edit)="openEdit($event)" (remove)="askDelete($event)" />
-        </p-card>
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Últimos registros</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <app-weight-table
+              [records]="weights.records()"
+              (edit)="openRecord($event)"
+              (remove)="askDelete($event)"
+            />
+          </mat-card-content>
+        </mat-card>
 
         <!-- Botón flotante (móvil) -->
-        <p-button class="only-mobile fab" icon="pi pi-plus" [rounded]="true"
-                  ariaLabel="Añadir registro" (onClick)="openNew()" />
-
-        <app-record-dialog [(visible)]="dialogOpen" [record]="editing()" />
+        <button
+          mat-fab
+          type="button"
+          class="fab"
+          aria-label="Añadir registro"
+          (click)="openRecord(null)"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
       } @else {
         <app-login-form />
       }
@@ -47,39 +76,43 @@ import { RecordDialogComponent } from './record-dialog.component';
 export class HomeComponent {
   protected readonly auth = inject(AuthService);
   protected readonly weights = inject(WeightService);
-  private readonly confirm = inject(ConfirmationService);
-  private readonly toast = inject(MessageService);
+  private readonly dialog = inject(MatDialog);
+  private readonly confirm = inject(ConfirmService);
+  private readonly notify = inject(NotifyService);
 
-  protected readonly dialogOpen = signal(false);
-  protected readonly editing = signal<WeightRecord | null>(null);
-
-  protected openNew(): void {
-    this.editing.set(null);
-    this.dialogOpen.set(true);
-  }
-
-  protected openEdit(r: WeightRecord): void {
-    this.editing.set(r);
-    this.dialogOpen.set(true);
-  }
-
-  protected askDelete(r: WeightRecord): void {
-    this.confirm.confirm({
-      header: 'Eliminar registro',
-      message: `¿Eliminar el registro del ${formatDate(r.date, 'dd/MM/yyyy', 'es')}? Esta acción no se puede deshacer.`,
-      icon: 'pi pi-trash',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonProps: { severity: 'danger' },
-      rejectButtonProps: { severity: 'secondary', outlined: true },
-      accept: async () => {
-        try {
-          await this.weights.remove(r.record_id);
-          this.toast.add({ severity: 'success', summary: 'Registro eliminado', life: 2500 });
-        } catch {
-          this.toast.add({ severity: 'error', summary: 'No se pudo eliminar el registro' });
-        }
-      },
+  /** Se llama desde un clic, así que siempre estamos en el navegador (no hay SSR aquí). */
+  protected openRecord(record: WeightRecord | null): void {
+    const mobile = typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
+    this.dialog.open<RecordDialogComponent, RecordDialogData>(RecordDialogComponent, {
+      data: { record, mobile },
+      disableClose: true,
+      ...(mobile
+        ? {
+            width: '100vw',
+            maxWidth: '100vw',
+            height: '100dvh',
+            maxHeight: '100dvh',
+            panelClass: 'record-dialog-fs',
+          }
+        : { width: '30rem', maxWidth: '95vw' }),
     });
+  }
+
+  protected async askDelete(r: WeightRecord): Promise<void> {
+    const result = await this.confirm.ask({
+      title: 'Eliminar registro',
+      message: `¿Eliminar el registro del ${formatDate(r.date, 'dd/MM/yyyy', 'es')}?\nEsta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar',
+      cancelLabel: 'Cancelar',
+      danger: true,
+    });
+    if (result !== 'confirm') return;
+
+    try {
+      await this.weights.remove(r.record_id);
+      this.notify.success('Registro eliminado');
+    } catch {
+      this.notify.error('No se pudo eliminar el registro');
+    }
   }
 }
