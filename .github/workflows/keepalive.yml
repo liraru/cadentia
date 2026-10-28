@@ -2,18 +2,36 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    - cron: '0 7 */3 * *'    # cada 3 días a las 07:00 UTC
+    - cron: '0 7 */3 * *' # cada 3 días a las 07:00 UTC
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Consultar Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          curl --fail --silent --show-error --retry 3 --retry-delay 5 \
-            "$SUPABASE_URL/rest/v1/keep_alive?select=id&limit=1" \
-            -H "apikey: $SUPABASE_ANON_KEY"
+          URL="$(printf '%s' "$SUPABASE_URL" | tr -d '[:space:]')"
+          URL="${URL%/}"
+          KEY="$(printf '%s' "$SUPABASE_ANON_KEY" | tr -d '[:space:]')"
+
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::Faltan los secretos SUPABASE_URL y/o SUPABASE_ANON_KEY (Settings > Secrets and variables > Actions)"
+            exit 1
+          fi
+
+          STATUS=$(curl --silent --show-error --retry 3 --retry-delay 5 \
+            --output response.json --write-out '%{http_code}' \
+            "$URL/rest/v1/keep_alive?select=id&limit=1" \
+            -H "apikey: $KEY")
+
+          echo "HTTP $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "::error::Supabase respondió $STATUS"
+            cat response.json
+            exit 1
+          fi

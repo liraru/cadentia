@@ -129,7 +129,20 @@ export class WeightChartComponent {
       plugins: {
         legend: {
           display: isMeasures,
-          labels: { color: '#F0F3EF', usePointStyle: true, boxWidth: 8 },
+          position: 'top',
+          align: 'center',
+          labels: {
+            color: '#F0F3EF',
+            font: { size: 13 },
+            usePointStyle: true,
+            pointStyle: 'circle',
+            // Ancho reservado para la muestra: deja aire entre el círculo y el texto
+            boxWidth: 14,
+            // Alto igual al diámetro deseado del círculo (centrado verticalmente con el texto)
+            boxHeight: 7,
+            // Separación horizontal entre elementos de la leyenda
+            padding: 28,
+          },
         },
       },
       scales: {
