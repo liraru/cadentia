@@ -26,8 +26,9 @@
               }
             ],
             "styles": [
-              "src/styles.scss",
-              "node_modules/material-icons/iconfont/material-icons.css"
+              "node_modules/material-icons/iconfont/material-icons.css",
+              "node_modules/@fontsource/dm-serif-display/index.css",
+              "src/styles.scss"
             ],
             "server": "src/main.server.ts",
             "outputMode": "server",

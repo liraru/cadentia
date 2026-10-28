@@ -23,6 +23,14 @@ type LineData = ChartData<'line', (number | null)[], string>;
 @Component({
   selector: 'app-weight-chart',
   imports: [MatFormFieldModule, MatSelectModule],
+  styles: [
+    `
+      :host {
+        display: block;
+        padding-top: 1rem;
+      }
+    `,
+  ],
   template: `
     <div class="chart-head">
       <mat-form-field>
