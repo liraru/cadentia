@@ -1,9 +1,9 @@
-name: Deploy a GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [master]
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -18,36 +18,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 22        # usa la versión que exija Angular 22
-          cache: npm
+          node-version: '22'
+          cache: 'npm'
 
-      - run: npm ci
-
-      - name: Generar environment de producción
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: |
-          cat > src/environments/environment.ts <<EOF
-          export const environment = {
-            production: true,
-            supabaseUrl: '${SUPABASE_URL}',
-            supabaseKey: '${SUPABASE_ANON_KEY}',
-          };
-          EOF
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build
-        run: npx ng build --configuration production --base-href "/${{ github.event.repository.name }}/"
+        run: npx ng build --configuration production --base-href /cadentia/
 
-      # Fallback SPA: al recargar una ruta, GitHub Pages sirve 404.html (= index.html)
-      - name: Copiar index.html a 404.html
+      - name: Add SPA fallback (404.html)
         run: cp dist/cadentia/browser/index.html dist/cadentia/browser/404.html
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist/cadentia/browser
 
@@ -58,5 +48,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4

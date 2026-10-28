@@ -17,8 +17,21 @@ import { MatSelectModule } from '@angular/material/select';
 import type { Chart, ChartData, ChartOptions } from 'chart.js';
 import { WeightRecord } from '../../core/models';
 
-type Metric = 'weight' | 'imc' | 'waist' | 'thigh' | 'chest' | 'arm';
+type Metric = 'weight' | 'imc' | 'measures';
 type LineData = ChartData<'line', (number | null)[], string>;
+
+interface ChartView {
+  data: LineData;
+  options: ChartOptions<'line'>;
+}
+
+/** Medidas corporales que se dibujan juntas en la opción "Medidas". */
+const MEASURES: { key: 'waist' | 'thigh' | 'chest' | 'arm'; label: string; color: string }[] = [
+  { key: 'waist', label: 'Cintura', color: '#70B68A' },
+  { key: 'thigh', label: 'Muslo', color: '#E3C94A' },
+  { key: 'chest', label: 'Pecho', color: '#5BA8D6' },
+  { key: 'arm', label: 'Brazo', color: '#E8743B' },
+];
 
 @Component({
   selector: 'app-weight-chart',
@@ -34,9 +47,9 @@ type LineData = ChartData<'line', (number | null)[], string>;
   template: `
     <div class="chart-head">
       <mat-form-field>
-        <mat-label>Magnitud</mat-label>
+        <mat-label>Datos</mat-label>
         <mat-select
-          aria-label="Magnitud a mostrar"
+          aria-label="Datos a mostrar"
           [value]="metric()"
           (selectionChange)="metric.set($event.value)"
         >
@@ -67,50 +80,72 @@ export class WeightChartComponent {
   protected readonly metrics: { label: string; value: Metric }[] = [
     { label: 'Peso (kg)', value: 'weight' },
     { label: 'IMC', value: 'imc' },
-    { label: 'Cintura (cm)', value: 'waist' },
-    { label: 'Muslo (cm)', value: 'thigh' },
-    { label: 'Pecho (cm)', value: 'chest' },
-    { label: 'Brazo (cm)', value: 'arm' },
+    { label: 'Medidas (cm)', value: 'measures' },
   ];
   protected readonly metric = signal<Metric>('weight');
 
-  private readonly data = computed<LineData>(() => {
+  private readonly view = computed<ChartView>(() => {
     const asc = [...this.records()].sort((a, b) => a.date.localeCompare(b.date));
     const m = this.metric();
-    const label = this.metrics.find((x) => x.value === m)!.label;
-    return {
-      labels: asc.map((r) => formatDate(r.date, 'dd/MM/yy', 'es')),
-      datasets: [
-        {
-          label,
-          data: asc.map((r) => r[m]),
-          borderColor: '#70B68A',
-          backgroundColor: 'rgba(112,182,138,.18)',
-          pointBackgroundColor: '#F0F3EF',
-          pointRadius: 3,
-          tension: 0.3,
-          fill: true,
-          spanGaps: true,
-        },
-      ],
-    };
-  });
+    const labels = asc.map((r) => formatDate(r.date, 'dd/MM/yy', 'es'));
+    const isMeasures = m === 'measures';
 
-  private readonly options: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: {
-        ticks: { color: '#F0F3EF', maxRotation: 0, autoSkip: true, maxTicksLimit: 6 },
-        grid: { color: 'rgba(240,243,239,.08)' },
+    const data: LineData = isMeasures
+      ? {
+          labels,
+          datasets: MEASURES.map((ms) => ({
+            label: ms.label,
+            data: asc.map((r) => r[ms.key]),
+            borderColor: ms.color,
+            backgroundColor: ms.color,
+            pointBackgroundColor: ms.color,
+            pointRadius: 3,
+            tension: 0.3,
+            fill: false,
+            spanGaps: true,
+          })),
+        }
+      : {
+          labels,
+          datasets: [
+            {
+              label: this.metrics.find((x) => x.value === m)!.label,
+              data: asc.map((r) => r[m]),
+              borderColor: '#70B68A',
+              backgroundColor: 'rgba(112,182,138,.18)',
+              pointBackgroundColor: '#F0F3EF',
+              pointRadius: 3,
+              tension: 0.3,
+              fill: true,
+              spanGaps: true,
+            },
+          ],
+        };
+
+    const options: ChartOptions<'line'> = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: isMeasures ? { mode: 'index', intersect: false } : undefined,
+      plugins: {
+        legend: {
+          display: isMeasures,
+          labels: { color: '#F0F3EF', usePointStyle: true, boxWidth: 8 },
+        },
       },
-      y: {
-        ticks: { color: '#F0F3EF' },
-        grid: { color: 'rgba(240,243,239,.08)' },
+      scales: {
+        x: {
+          ticks: { color: '#F0F3EF', maxRotation: 0, autoSkip: true, maxTicksLimit: 6 },
+          grid: { color: 'rgba(240,243,239,.08)' },
+        },
+        y: {
+          ticks: { color: '#F0F3EF' },
+          grid: { color: 'rgba(240,243,239,.08)' },
+        },
       },
-    },
-  };
+    };
+
+    return { data, options };
+  });
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -121,18 +156,18 @@ export class WeightChartComponent {
     // Chart.js solo se carga y se pinta en el navegador (evita fallos de SSR)
     effect(() => {
       const canvas = this.canvas()?.nativeElement;
-      const data = this.data();
+      const view = this.view();
       if (!this.isBrowser) return;
       if (!canvas) {
         this.chart?.destroy();
         this.chart = undefined;
         return;
       }
-      untracked(() => void this.draw(canvas, data));
+      untracked(() => void this.draw(canvas, view));
     });
   }
 
-  private async draw(canvas: HTMLCanvasElement, data: LineData): Promise<void> {
+  private async draw(canvas: HTMLCanvasElement, view: ChartView): Promise<void> {
     const {
       Chart: ChartJs,
       LineController,
@@ -141,6 +176,7 @@ export class WeightChartComponent {
       LinearScale,
       CategoryScale,
       Filler,
+      Legend,
       Tooltip,
     } = await import('chart.js');
     ChartJs.register(
@@ -150,6 +186,7 @@ export class WeightChartComponent {
       LinearScale,
       CategoryScale,
       Filler,
+      Legend,
       Tooltip,
     );
 
@@ -160,10 +197,11 @@ export class WeightChartComponent {
       this.chart = undefined;
     }
     if (this.chart) {
-      this.chart.data = data;
+      this.chart.data = view.data;
+      this.chart.options = view.options;
       this.chart.update();
       return;
     }
-    this.chart = new ChartJs(canvas, { type: 'line', data, options: this.options });
+    this.chart = new ChartJs(canvas, { type: 'line', data: view.data, options: view.options });
   }
 }

@@ -23,7 +23,7 @@ import { InstallService } from '../core/install.service';
       <mat-toolbar>
         <a routerLink="/" class="brand" aria-label="Inicio">
           <img src="icons/icon-72x72.png" alt="" />
-          <span>Peso</span>
+          <span>Cadentia</span>
         </a>
 
         <span class="spacer"></span>
