@@ -1,5 +1,5 @@
 import { Injectable, effect, inject, signal, untracked } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { NotifyService } from './notify.service';
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { WeightRecord, WeightRecordInput } from './models';
@@ -8,7 +8,7 @@ import { WeightRecord, WeightRecordInput } from './models';
 export class WeightService {
   private readonly sb = inject(SupabaseService).client;
   private readonly auth = inject(AuthService);
-  private readonly toast = inject(MessageService);
+  private readonly notify = inject(NotifyService);
 
   /** Siempre ordenados de más reciente a más antiguo */
   readonly records = signal<WeightRecord[]>([]);
@@ -31,7 +31,7 @@ export class WeightService {
     this.loading.set(false);
 
     if (error) {
-      this.toast.add({ severity: 'error', summary: 'No se pudieron cargar los registros' });
+      this.notify.error('No se pudieron cargar los registros');
       return;
     }
     this.records.set((data ?? []) as WeightRecord[]);

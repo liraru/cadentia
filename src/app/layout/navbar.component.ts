@@ -1,65 +1,94 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, TemplateRef, inject, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MenuItem } from 'primeng/api';
-import { MenubarModule } from 'primeng/menubar';
-import { DialogModule } from 'primeng/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { AuthService } from '../core/auth.service';
 import { InstallService } from '../core/install.service';
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink, MenubarModule, DialogModule],
+  imports: [
+    RouterLink,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    MatDialogModule,
+  ],
   template: `
     <header class="topbar">
-      @if (auth.user()) {
-        <p-menubar [model]="items()">
-          <ng-template #start>
-            <a routerLink="/" class="brand" aria-label="Inicio">
-              <img src="icons/icon-72x72.png" alt="" />
-              <span>Peso</span>
-            </a>
-          </ng-template>
-        </p-menubar>
-      } @else {
-        <div class="brand-bar">
-          <a routerLink="/" class="brand" aria-label="Inicio">
-            <img src="icons/icon-72x72.png" alt="" />
-            <span>Peso</span>
-          </a>
-        </div>
-      }
+      <mat-toolbar>
+        <a routerLink="/" class="brand" aria-label="Inicio">
+          <img src="icons/icon-72x72.png" alt="" />
+          <span>Peso</span>
+        </a>
+
+        <span class="spacer"></span>
+
+        @if (auth.user()) {
+          <!-- Escritorio: acciones en la barra -->
+          <nav class="only-desktop nav-actions">
+            @if (install.available()) {
+              <button mat-button type="button" (click)="onInstall()">
+                <mat-icon>download</mat-icon>
+                Instalar app
+              </button>
+            }
+            <button mat-button type="button" (click)="auth.signOut()">
+              <mat-icon>logout</mat-icon>
+              Cerrar sesión
+            </button>
+          </nav>
+
+          <!-- Móvil: hamburguesa con menú desplegable -->
+          <div class="only-mobile">
+            <button mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Menú">
+              <mat-icon>menu</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu" xPosition="before">
+              @if (install.available()) {
+                <button mat-menu-item type="button" (click)="onInstall()">
+                  <mat-icon>download</mat-icon>
+                  <span>Instalar app</span>
+                </button>
+              }
+              <button mat-menu-item type="button" (click)="auth.signOut()">
+                <mat-icon>logout</mat-icon>
+                <span>Cerrar sesión</span>
+              </button>
+            </mat-menu>
+          </div>
+        }
+      </mat-toolbar>
     </header>
 
-    <p-dialog header="Instalar en iPhone / iPad" [(visible)]="iosHelp"
-              [modal]="true" [draggable]="false" [style]="{ width: '90vw', maxWidth: '24rem' }">
-      <ol>
-        <li>Abre esta web en <strong>Safari</strong>.</li>
-        <li>Pulsa el botón <strong>Compartir</strong>.</li>
-        <li>Elige <strong>Añadir a pantalla de inicio</strong>.</li>
-      </ol>
-    </p-dialog>
+    <ng-template #iosHelp>
+      <h2 mat-dialog-title>Instalar en iPhone / iPad</h2>
+      <mat-dialog-content>
+        <ol>
+          <li>Abre esta web en <strong>Safari</strong>.</li>
+          <li>Pulsa el botón <strong>Compartir</strong>.</li>
+          <li>Elige <strong>Añadir a pantalla de inicio</strong>.</li>
+        </ol>
+      </mat-dialog-content>
+      <mat-dialog-actions align="end">
+        <button mat-button type="button" mat-dialog-close>Entendido</button>
+      </mat-dialog-actions>
+    </ng-template>
   `,
 })
 export class NavbarComponent {
   protected readonly auth = inject(AuthService);
-  private readonly install = inject(InstallService);
-  protected readonly iosHelp = signal(false);
+  protected readonly install = inject(InstallService);
+  private readonly dialog = inject(MatDialog);
+  private readonly iosHelp = viewChild.required<TemplateRef<unknown>>('iosHelp');
 
-  protected readonly items = computed<MenuItem[]>(() => [
-    {
-      label: 'Instalar app',
-      icon: 'pi pi-download',
-      visible: this.install.available(),
-      command: () => this.onInstall(),
-    },
-    {
-      label: 'Cerrar sesión',
-      icon: 'pi pi-sign-out',
-      command: () => this.auth.signOut(),
-    },
-  ]);
-
-  private async onInstall(): Promise<void> {
-    if ((await this.install.prompt()) === 'ios') this.iosHelp.set(true);
+  protected async onInstall(): Promise<void> {
+    if ((await this.install.prompt()) === 'ios') {
+      this.dialog.open(this.iosHelp(), { width: '90vw', maxWidth: '24rem' });
+    }
   }
 }
