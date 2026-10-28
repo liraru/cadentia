@@ -17,6 +17,89 @@ import { imcBand } from '../../core/imc';
     MatButtonModule,
     MatIconModule,
   ],
+  styles: [
+    `
+      /* Separación entre el título "Últimos registros" y la primera tarjeta */
+      .only-mobile {
+        padding-top: 1rem;
+      }
+
+      /* ---------- Tarjeta de registro (móvil) ---------- */
+      .rec-card {
+        background: var(--surface);
+        border: 1px solid var(--mat-sys-outline-variant);
+        border-radius: 16px;
+        padding: 0; /* anula el padding heredado de styles.scss */
+        margin-bottom: 1rem;
+        overflow: hidden; /* la cabecera respeta el radio de la tarjeta */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      }
+
+      /* Cabecera: franja más oscura, separada del contenido por una línea */
+      .rec-card header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0; /* anula el margin-bottom heredado de styles.scss */
+        padding: 0.9rem 1rem;
+        background: rgba(32, 41, 35, 0.55);
+        border-bottom: 1px solid rgba(112, 182, 138, 0.22);
+        border-radius: 15px 15px 0 0; /* 16px de la tarjeta - 1px del borde */
+      }
+      .rec-card header strong {
+        font-size: 1.05rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+      .rec-card header .imc-badge {
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+        padding: 0.4rem 0.7rem;
+      }
+
+      /* Contenido */
+      .rec-card dl {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.1rem 1.25rem;
+        margin: 0;
+        padding: 1.25rem 1rem 1.1rem;
+      }
+      .rec-card dt {
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.6;
+        margin-bottom: 0.2rem;
+      }
+      .rec-card dd {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      /* El peso es el dato principal: más grande y con el verde de acento */
+      .rec-card dl > div:first-child dd {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #70b68a;
+      }
+
+      /* Acciones */
+      .rec-card footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-top: 1px solid rgba(240, 243, 239, 0.08);
+      }
+    `,
+  ],
   template: `
     <!-- Escritorio -->
     <div class="only-desktop">
