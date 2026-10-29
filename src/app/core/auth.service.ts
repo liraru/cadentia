@@ -3,6 +3,12 @@ import type { User } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
 import { UserProfile } from './models';
 
+export interface ProfileChanges {
+  name: string;
+  height: number | null;
+  target: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly sb = inject(SupabaseService).client;
@@ -38,10 +44,30 @@ export class AuthService {
     await this.sb.auth.signOut();
   }
 
+  /** Actualiza nombre, altura y peso objetivo del usuario autenticado (RLS limita a su propia fila). */
+  async updateProfile(changes: ProfileChanges): Promise<void> {
+    const u = this.user();
+    if (!u) throw new Error('No hay sesión iniciada');
+
+    const { data, error } = await this.sb
+      .from('users')
+      .update(changes)
+      .eq('user_id', u.id)
+      .select('user_id, name, height, target')
+      .single();
+    if (error) throw error;
+    this.profile.set(data as UserProfile);
+  }
+
+  async changePassword(newPassword: string): Promise<void> {
+    const { error } = await this.sb.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  }
+
   private async loadProfile(userId: string): Promise<void> {
     const { data, error } = await this.sb
       .from('users')
-      .select('user_id, name, height')
+      .select('user_id, name, height, target')
       .eq('user_id', userId)
       .single();
     this.profile.set(error ? null : (data as UserProfile));

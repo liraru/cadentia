@@ -114,6 +114,14 @@ import { imcBand } from '../../core/imc';
           <td mat-cell *matCellDef="let r" class="num">{{ r.weight | number: '1.1-2' }}</td>
         </ng-container>
 
+        <ng-container matColumnDef="remaining">
+          <th mat-header-cell *matHeaderCellDef class="num">Faltan (kg)</th>
+          <td mat-cell *matCellDef="let r" class="num">
+            @let rem = remaining(r.weight);
+            {{ rem !== null ? (rem | number: '1.1-2') : '—' }}
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="imc">
           <th mat-header-cell *matHeaderCellDef>IMC</th>
           <td mat-cell *matCellDef="let r">
@@ -207,6 +215,13 @@ import { imcBand } from '../../core/imc';
               <dd>{{ r.weight | number: '1.1-2' }} kg</dd>
             </div>
             <div>
+              <dt>Faltan</dt>
+              <dd>
+                @let rem = remaining(r.weight);
+                {{ rem !== null ? (rem | number: '1.1-2') + ' kg' : '—' }}
+              </dd>
+            </div>
+            <div>
               <dt>Cintura</dt>
               <dd>{{ r.waist !== null ? (r.waist | number: '1.0-1') + ' cm' : '—' }}</dd>
             </div>
@@ -253,6 +268,8 @@ import { imcBand } from '../../core/imc';
 })
 export class WeightTableComponent {
   readonly records = input.required<WeightRecord[]>();
+  /** Peso objetivo del usuario (kg); null si aún no lo ha indicado. */
+  readonly target = input<number | null>(null);
   readonly edit = output<WeightRecord>();
   readonly remove = output<WeightRecord>();
 
@@ -262,6 +279,7 @@ export class WeightTableComponent {
   protected readonly columns = [
     'date',
     'weight',
+    'remaining',
     'imc',
     'waist',
     'thigh',
@@ -282,6 +300,12 @@ export class WeightTableComponent {
         this.pageIndex.set(0);
       }
     });
+  }
+
+  /** kg que faltan para el objetivo, sin signo. Se calcula en caliente; no se guarda en BD. */
+  protected remaining(weight: number): number | null {
+    const target = this.target();
+    return target === null ? null : Math.abs(weight - target);
   }
 
   protected onPage(e: PageEvent): void {

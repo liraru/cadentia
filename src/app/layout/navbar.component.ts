@@ -7,6 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { AuthService } from '../core/auth.service';
 import { InstallService } from '../core/install.service';
+import { UserDialogComponent } from './user-dialog.component';
 
 @Component({
   selector: 'app-navbar',
@@ -31,6 +32,10 @@ import { InstallService } from '../core/install.service';
         @if (auth.user()) {
           <!-- Escritorio: acciones en la barra -->
           <nav class="only-desktop nav-actions">
+            <button mat-button type="button" (click)="openUser()">
+              <mat-icon>account_circle</mat-icon>
+              Mi cuenta
+            </button>
             @if (install.available()) {
               <button mat-button type="button" (click)="onInstall()">
                 <mat-icon>download</mat-icon>
@@ -49,6 +54,10 @@ import { InstallService } from '../core/install.service';
               <mat-icon>menu</mat-icon>
             </button>
             <mat-menu #menu="matMenu" xPosition="before">
+              <button mat-menu-item type="button" (click)="openUser()">
+                <mat-icon>account_circle</mat-icon>
+                <span>Mi cuenta</span>
+              </button>
               @if (install.available()) {
                 <button mat-menu-item type="button" (click)="onInstall()">
                   <mat-icon>download</mat-icon>
@@ -90,5 +99,21 @@ export class NavbarComponent {
     if ((await this.install.prompt()) === 'ios') {
       this.dialog.open(this.iosHelp(), { width: '90vw', maxWidth: '24rem' });
     }
+  }
+
+  /** Se llama desde un clic, así que siempre estamos en el navegador (no hay SSR aquí). */
+  protected openUser(): void {
+    const mobile = typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
+    this.dialog.open(UserDialogComponent, {
+      ...(mobile
+        ? {
+            width: '100vw',
+            maxWidth: '100vw',
+            height: '100dvh',
+            maxHeight: '100dvh',
+            panelClass: 'record-dialog-fs',
+          }
+        : { width: '30rem', maxWidth: '95vw' }),
+    });
   }
 }

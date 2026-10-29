@@ -9,7 +9,8 @@
 create table public.users (
   user_id uuid primary key references auth.users (id) on delete cascade,
   name    text not null,
-  height  numeric(3,2) not null check (height between 0.50 and 2.50) -- metros
+  height  numeric(3,2) check (height between 0.50 and 2.50), -- metros; opcional hasta que el usuario la rellene
+  target  numeric(5,2) check (target > 0)                    -- peso objetivo en kg; opcional
 );
 
 create table public.weight_target (
@@ -41,6 +42,31 @@ create index weight_record_user_date_idx
 -- Tabla mínima para el keep-alive
 create table public.keep_alive (id int primary key);
 insert into public.keep_alive values (1);
+
+-- ============ PERFIL AUTOMÁTICO ============
+-- Al crear un usuario en Authentication se crea su fila en public.users.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.users (user_id, name)
+  values (
+    new.id,
+    coalesce(nullif(new.raw_user_meta_data ->> 'name', ''), split_part(new.email, '@', 1))
+  )
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$$;
+
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
 
 -- ============ PERMISOS ============
 grant select, update                  on public.users         to authenticated;
@@ -75,6 +101,7 @@ create policy "targets: solo los propios" on public.weight_target
 create policy "keep_alive: lectura pública" on public.keep_alive
   for select to anon using (true);
 
--- ============ ALTA DE UN USUARIO (después de crearlo en Authentication -> Users) ============
--- insert into public.users (user_id, name, height)
--- values ('PEGA-AQUI-EL-UID', 'Lorena', 1.65);   -- altura en metros
+-- ============ ALTA DE UN USUARIO ============
+-- Crea el usuario en Authentication -> Users: su perfil se genera solo
+-- (nombre = parte del correo antes de la @). Después puedes ajustar el nombre,
+-- la altura y el peso objetivo desde "Mi cuenta" en la app.

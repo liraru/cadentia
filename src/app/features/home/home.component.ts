@@ -51,6 +51,7 @@ import { RecordDialogComponent, RecordDialogData } from './record-dialog.compone
           <mat-card-content>
             <app-weight-table
               [records]="weights.records()"
+              [target]="auth.profile()?.target ?? null"
               (edit)="openRecord($event)"
               (remove)="askDelete($event)"
             />
