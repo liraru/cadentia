@@ -49,6 +49,17 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
         display: flex;
         justify-content: flex-end;
       }
+
+      /* Altura y peso objetivo: siempre en la misma línea, también en móvil */
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        align-items: start;
+      }
+      .pair mat-form-field {
+        min-width: 0;
+      }
     `,
   ],
   template: `
@@ -73,21 +84,29 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
           <mat-error>Indica tu nombre.</mat-error>
         </mat-form-field>
 
-        <mat-form-field class="full">
-          <mat-label>Altura</mat-label>
-          <input matInput type="number" inputmode="decimal" step="0.01" formControlName="height" />
-          <span matTextSuffix>m&nbsp;</span>
-          <mat-hint>Se usa para calcular el IMC de nuevos registros.</mat-hint>
-          <mat-error>Introduce una altura válida (0,50–2,50 m).</mat-error>
-        </mat-form-field>
+        <div class="full pair">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Altura</mat-label>
+            <input
+              matInput
+              type="number"
+              inputmode="decimal"
+              step="0.01"
+              formControlName="height"
+            />
+            <span matTextSuffix>m&nbsp;</span>
+            <mat-hint>Para calcular el IMC.</mat-hint>
+            <mat-error>Altura válida: 0,50–2,50 m.</mat-error>
+          </mat-form-field>
 
-        <mat-form-field class="full">
-          <mat-label>Peso objetivo</mat-label>
-          <input matInput type="number" inputmode="decimal" step="0.1" formControlName="target" />
-          <span matTextSuffix>kg&nbsp;</span>
-          <mat-hint>Se usa para calcular los kg que te faltan en cada registro.</mat-hint>
-          <mat-error>Introduce un peso válido (20–500 kg).</mat-error>
-        </mat-form-field>
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Peso objetivo</mat-label>
+            <input matInput type="number" inputmode="decimal" step="0.1" formControlName="target" />
+            <span matTextSuffix>kg&nbsp;</span>
+            <mat-hint>Para calcular los kg que faltan.</mat-hint>
+            <mat-error>Peso válido: 20–500 kg.</mat-error>
+          </mat-form-field>
+        </div>
       </form>
 
       <h3 class="section">Cambiar contraseña</h3>

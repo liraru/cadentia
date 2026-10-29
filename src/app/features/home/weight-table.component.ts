@@ -26,16 +26,15 @@ import { imcBand } from '../../core/imc';
 
       /* ---------- Tarjeta de registro (móvil) ---------- */
       .rec-card {
-        background: var(--surface);
-        border: 1px solid var(--mat-sys-outline-variant);
+        background: var(--bg);
+        border: 1px solid rgba(243, 240, 232, 0.08);
         border-radius: 16px;
         padding: 0; /* anula el padding heredado de styles.scss */
         margin-bottom: 1rem;
         overflow: hidden; /* la cabecera respeta el radio de la tarjeta */
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
       }
 
-      /* Cabecera: franja más oscura, separada del contenido por una línea */
+      /* Cabecera: franja ligeramente más clara, separada del contenido por una línea */
       .rec-card header {
         display: flex;
         justify-content: space-between;
@@ -43,8 +42,8 @@ import { imcBand } from '../../core/imc';
         gap: 0.75rem;
         margin: 0; /* anula el margin-bottom heredado de styles.scss */
         padding: 0.9rem 1rem;
-        background: rgba(32, 41, 35, 0.55);
-        border-bottom: 1px solid rgba(112, 182, 138, 0.22);
+        background: rgba(243, 240, 232, 0.04);
+        border-bottom: 1px solid rgba(232, 201, 152, 0.16);
         border-radius: 15px 15px 0 0; /* 16px de la tarjeta - 1px del borde */
       }
       .rec-card header strong {
@@ -74,7 +73,7 @@ import { imcBand } from '../../core/imc';
         font-weight: 500;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        opacity: 0.6;
+        color: var(--text-2);
         margin-bottom: 0.2rem;
       }
       .rec-card dd {
@@ -83,11 +82,11 @@ import { imcBand } from '../../core/imc';
         font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
-      /* El peso es el dato principal: más grande y con el verde de acento */
+      /* El peso es el dato principal: más grande y en dorado */
       .rec-card dl > div:first-child dd {
         font-size: 1.4rem;
         font-weight: 700;
-        color: #70b68a;
+        color: var(--gold);
       }
 
       /* Acciones */
@@ -96,7 +95,7 @@ import { imcBand } from '../../core/imc';
         justify-content: flex-end;
         gap: 0.25rem;
         padding: 0.25rem 0.5rem;
-        border-top: 1px solid rgba(240, 243, 239, 0.08);
+        border-top: 1px solid rgba(243, 240, 232, 0.08);
       }
     `,
   ],
