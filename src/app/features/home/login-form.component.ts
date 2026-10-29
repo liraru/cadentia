@@ -24,7 +24,7 @@ import { AuthService } from '../../core/auth.service';
       <mat-card class="login-card">
         <div class="login-logo">
           <img src="icons/icon-192x192.png" alt="Logotipo" />
-          <h1>Registro de peso</h1>
+          <h1>Cadentia</h1>
         </div>
 
         <form class="login-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>

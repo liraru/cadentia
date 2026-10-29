@@ -1,5 +1,5 @@
 -- ============================================================
--- Registro de peso — esquema de base de datos (Supabase)
+-- Cadentia — esquema de base de datos (Supabase)
 -- Ejecutar completo en: SQL Editor -> New query
 -- ============================================================
 
