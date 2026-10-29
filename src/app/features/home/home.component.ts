@@ -9,6 +9,8 @@ import { ConfirmService } from '../../core/confirm.service';
 import { NotifyService } from '../../core/notify.service';
 import { WeightService } from '../../core/weight.service';
 import { WeightRecord } from '../../core/models';
+import { GoalCardComponent } from './goal-card.component';
+import { ImcLevelsCardComponent } from './imc-levels-card.component';
 import { LoginFormComponent } from './login-form.component';
 import { WeightChartComponent } from './weight-chart.component';
 import { WeightTableComponent } from './weight-table.component';
@@ -20,6 +22,8 @@ import { RecordDialogComponent, RecordDialogData } from './record-dialog.compone
     MatButtonModule,
     MatCardModule,
     MatIconModule,
+    GoalCardComponent,
+    ImcLevelsCardComponent,
     LoginFormComponent,
     WeightChartComponent,
     WeightTableComponent,
@@ -35,14 +39,15 @@ import { RecordDialogComponent, RecordDialogData } from './record-dialog.compone
           </button>
         </div>
 
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Evolución</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <app-weight-chart [records]="weights.records()" />
-          </mat-card-content>
-        </mat-card>
+        <app-weight-chart [records]="weights.records()" [target]="auth.profile()?.target ?? null" />
+
+        <div class="stats-grid">
+          <app-imc-levels-card
+            [records]="weights.records()"
+            [height]="auth.profile()?.height ?? null"
+          />
+          <app-goal-card [records]="weights.records()" [target]="auth.profile()?.target ?? null" />
+        </div>
 
         <mat-card>
           <mat-card-header>
