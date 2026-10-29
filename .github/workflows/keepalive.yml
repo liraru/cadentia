@@ -9,6 +9,7 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    environment: github-pages # necesario para leer los secretos de entorno
     steps:
       - name: Consultar Supabase
         env:
